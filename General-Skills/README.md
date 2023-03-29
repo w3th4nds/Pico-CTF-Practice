@@ -1139,4 +1139,3 @@ Specialer$ cd ala/
 Specialer$ read -r line < kazam.txt; echo $line
 return 0 picoCTF{XXX}
 ```
-
