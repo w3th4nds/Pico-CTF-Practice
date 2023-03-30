@@ -92,3 +92,25 @@ picoCTF{pebffvatgurehovpbaqwarbnpu}
 picoCTF{odaeeuzsftqdgnuoazpvzqamot}
 picoCTF{nczddtyrespcfmtnzyouypzlns}
 ```
+
+### The Number
+
+Download the file and open it.
+
+![](../assets/the_numbers.png)
+
+These are the indexes of characters inside the alphabet.
+
+```python
+a = '_ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+print(a[16] + a[9] + a[3] + a[15] + a[3] + a[20] + a[6] +
+      '{' + a[20] + a[8] + a[5] + a[14] + a[21] + a[13] + a[2] +
+      a[5] + a[18] + a[19] + a[13] + a[1] + a[19] + a[15] + a[14] + '}')
+```
+
+````bash
+➜  Crypotgraphy git:(main) ✗ python solver.py
+PICOCTF{XXX}
+````
+
