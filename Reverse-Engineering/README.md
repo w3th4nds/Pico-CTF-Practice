@@ -2213,13 +2213,540 @@ print(f'Flag --> {flag.decode()}}}')
 Flag --> picoCTF{XXX}
 ```
 
+### Need For Speed
+
+Download the file and open it in a decompiler.
+
+Inside `main`:
+
+```c
+undefined8 main(void)
+
+{
+  header();
+  set_timer();
+  get_key();
+  print_flag();
+  return 0;
+}
+```
+
+All the functions we need are here for us. The only thing we want is to remove the `set_timer()` function because it's the one that stops us from getting the flag. Inside `ghidra`, we can patch this command so instead of calling `set_timer`, it will call something else.
+
+![](../assets/need-for-speed-before.png)
 
 
 
+We will replace the `CALL set_timer` with `MOV EAX, 0x0`.
+
+![](../assets/need-for-speed-patched.png)
 
 
 
+Then, we only need to export the file (`File` -> `Export program` -> `Format - ELF`) and then `chmod +x` and run it to get the flag.
 
+```bash
+➜  Reverse-Engineering git:(main) ✗ chmod +x patched && ./patched    
+Keep this thing over 50 mph!
+============================
 
+Creating key...
+Finished
+Printing flag:
+PICOCTF{XXX}
+```
 
+### vault-door-7
+
+Download the file and `cat` its content.
+
+```java
+import java.util.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.*;
+
+class VaultDoor7 {
+    public static void main(String args[]) {
+        VaultDoor7 vaultDoor = new VaultDoor7();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter vault password: ");
+        String userInput = scanner.next();
+	String input = userInput.substring("picoCTF{".length(),userInput.length()-1);
+	if (vaultDoor.checkPassword(input)) {
+	    System.out.println("Access granted.");
+	} else {
+	    System.out.println("Access denied!");
+        }
+    }
+
+    // Each character can be represented as a byte value using its
+    // ASCII encoding. Each byte contains 8 bits, and an int contains
+    // 32 bits, so we can "pack" 4 bytes into a single int. Here's an
+    // example: if the hex string is "01ab", then those can be
+    // represented as the bytes {0x30, 0x31, 0x61, 0x62}. When those
+    // bytes are represented as binary, they are:
+    //
+    // 0x30: 00110000
+    // 0x31: 00110001
+    // 0x61: 01100001
+    // 0x62: 01100010
+    //
+    // If we put those 4 binary numbers end to end, we end up with 32
+    // bits that can be interpreted as an int.
+    //
+    // 00110000001100010110000101100010 -> 808542562
+    //
+    // Since 4 chars can be represented as 1 int, the 32 character password can
+    // be represented as an array of 8 ints.
+    //
+    // - Minion #7816
+    public int[] passwordToIntArray(String hex) {
+        int[] x = new int[8];
+        byte[] hexBytes = hex.getBytes();
+        for (int i=0; i<8; i++) {
+            x[i] = hexBytes[i*4]   << 24
+                 | hexBytes[i*4+1] << 16
+                 | hexBytes[i*4+2] << 8
+                 | hexBytes[i*4+3];
+        }
+        return x;
+    }
+
+    public boolean checkPassword(String password) {
+        if (password.length() != 32) {
+            return false;
+        }
+        int[] x = passwordToIntArray(password);
+        return x[0] == 1096770097
+            && x[1] == 1952395366
+            && x[2] == 1600270708
+            && x[3] == 1601398833
+            && x[4] == 1716808014
+            && x[5] == 1734293296
+            && x[6] == 842413104
+            && x[7] == 1684157793;
+    }
+}
+```
+
+We need to reverse these 2 functions to get the initial flag.
+
+```python
+from pwn import *
+
+# Numbers
+enc = [ 1096770097, 1952395366, 1600270708, 1601398833,
+	  	1716808014, 1734293296, 842413104, 1684157793 ];
+
+flag = b'picoCTF{'
+
+for i in enc:
+	flag += p32(i, endian='big')
+
+print(f'Flag --> {flag.decode()}}}')
+```
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ python solver.py
+Flag --> picoCTF{XXX}
+```
+
+### Keygenme
+
+Download the file and open it in a decompiler.
+
+```c
+undefined8 FUN_00101209(char *param_1)
+
+{
+  size_t sVar1;
+  undefined8 uVar2;
+  long in_FS_OFFSET;
+  int counter;
+  int cnt;
+  int local_c8;
+  int local_c4;
+  int local_c0;
+  undefined2 local_ba;
+  byte local_b8 [16];
+  byte local_a8 [16];
+  undefined8 local_98;
+  undefined8 local_90;
+  undefined8 local_88;
+  undefined4 local_80;
+  char local_78 [12];
+  undefined local_6c;
+  undefined local_66;
+  undefined local_5f;
+  undefined local_5e;
+  char local_58 [32];
+  char acStack56 [40];
+  long canary;
+  
+  canary = *(long *)(in_FS_OFFSET + 0x28);
+  local_98 = 0x7b4654436f636970;
+  local_90 = 0x30795f676e317262;
+  local_88 = 0x6b5f6e77305f7275;
+  local_80 = 0x5f7933;
+  local_ba = 0x7d;
+  sVar1 = strlen((char *)&local_98);
+  MD5((uchar *)&local_98,sVar1,local_b8);
+  sVar1 = strlen((char *)&local_ba);
+  MD5((uchar *)&local_ba,sVar1,local_a8);
+  counter = 0;
+  for (cnt = 0; cnt < 0x10; cnt = cnt + 1) {
+    sprintf(local_78 + counter,"%02x",(ulong)local_b8[cnt]);
+    counter = counter + 2;
+  }
+  counter = 0;
+  for (local_c8 = 0; local_c8 < 0x10; local_c8 = local_c8 + 1) {
+    sprintf(local_58 + counter,"%02x",(ulong)local_a8[local_c8]);
+    counter = counter + 2;
+  }
+  for (local_c4 = 0; local_c4 < 0x1b; local_c4 = local_c4 + 1) {
+    acStack56[local_c4] = *(char *)((long)&local_98 + (long)local_c4);
+  }
+  acStack56[27] = local_66;
+  acStack56[28] = local_5e;
+  acStack56[29] = local_5f;
+  acStack56[30] = local_78[0];
+  acStack56[31] = local_5e;
+  acStack56[32] = local_66;
+  acStack56[33] = local_6c;
+  acStack56[34] = local_5e;
+  acStack56[35] = (undefined)local_ba;
+  sVar1 = strlen(param_1);
+  if (sVar1 == 0x24) {
+    for (local_c0 = 0; local_c0 < 0x24; local_c0 = local_c0 + 1) {
+      if (param_1[local_c0] != acStack56[local_c0]) {
+        uVar2 = 0;
+        goto LAB_00101475;
+      }
+    }
+    uVar2 = 1;
+  }
+  else {
+    uVar2 = 0;
+  }
+LAB_00101475:
+  if (canary != *(long *)(in_FS_OFFSET + 0x28)) {
+                    /* WARNING: Subroutine does not return */
+    __stack_chk_fail();
+  }
+  return uVar2;
+}
+```
+
+We see this interesting function that contains a string in hex. Print it in ASCII.
+
+```python
+from pwn import *
+
+# Half flag
+enc = [ b'7b4654436f636970', b'30795f676e317262', b'6b5f6e77305f7275', b'7d5f7933' ]
+
+flag = b''.join(unhex(hex_str)[::-1] for hex_str in enc)
+
+print(f'Flag --> {flag.decode()}')
+```
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ python solver.py
+Flag --> picoCTF{br1ng_y0ur_0wn_k3y_}
+```
+
+This flag is not accepted because it's only a part of the whole flag.
+
+The rest of the flag is here:
+
+```c
+  for (cnt_ = 0; cnt_ < 0x1b; cnt_ = cnt_ + 1) {
+    acStack56[cnt_] = *(char *)((long)&local_98 + (long)cnt_);
+  }
+  acStack56[27] = local_66;
+  acStack56[28] = local_5e;
+  acStack56[29] = local_5f;
+  acStack56[30] = local_78[0];
+  acStack56[31] = local_5e;
+  acStack56[32] = local_66;
+  acStack56[33] = local_6c;
+  acStack56[34] = local_5e;
+```
+
+We need to debug the program to find the rest of the flag.
+
+We get this error when we try to run the program.
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ ./keygenme 
+./keygenme: error while loading shared libraries: libcrypto.so.1.1: cannot open shared object file: No such file or directory
+```
+
+To fix it do the following.
+
+```bash
+wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb && \
+sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+```
+
+This address checks if the length of the key is `0x24`. We will set a breakpoint there and insert a `0x24` key as input. 
+
+Input string: `picoCTF{br1ng_y0ur_0wn_k3y_AAAAAAAAA`
+
+```gdb
+0x555555555419                  cmp    rax, 0x24
+```
+
+These 2 instructions check if our "A"s are the correct bytes.
+
+```gdb
+0x555555555450                  movzx  eax, BYTE PTR [rbp+rax*1-0x30]
+0x555555555455                  cmp    dl, al
+```
+
+We inspect the address there and get the rest of the flag.
+
+```gdb
+gef➤  x/20gs $rbp+$rax*1-0x30
+warning: Unable to display strings with size 'g', using 'b' instead.
+0x7fffffffde12:	"_0wn_k3y_9d74d90d}\377\177"
+0x7fffffffde27:	""
+0x7fffffffde28:	""
+0x7fffffffde29:	"\366\233\022\005g\032\270\200\336\377\377\377\177"
+0x7fffffffde37:	""
+0x7fffffffde38:	"\342TUUUU"
+0x7fffffffde3f:	""
+0x7fffffffde40:	"\230\337\377\377\377\177"
+0x7fffffffde47:	""
+0x7fffffffde48:	""
+0x7fffffffde49:	""
+0x7fffffffde4a:	""
+0x7fffffffde4b:	"\001\001"
+0x7fffffffde4e:	""
+0x7fffffffde4f:	""
+0x7fffffffde50:	"picoCTF{br1ng_y0ur_0wn_k3y_AAAAAAAAA"
+```
+
+### Ready Gladiator 0
+
+Connect to the remote server with `nc saturn.picoctf.net 55384 < imp.red`.
+
+We need to make a warrior that always loses, so something like this would work:
+
+```red
+;redcode
+;name Imp Ex
+;assert 1
+mov 1, 1
+end
+```
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ nc saturn.picoctf.net 55384 < imp.red
+;redcode
+;name Imp Ex
+;assert 1
+mov 1, 1
+end
+Submit your warrior: (enter 'end' when done)
+
+Warrior1:
+;redcode
+;name Imp Ex
+;assert 1
+mov 1, 1
+end
+
+Rounds: 100
+Warrior 1 wins: 0
+Warrior 2 wins: 100
+Ties: 0
+You did it!
+picoCTF{XXX}
+```
+
+### Ready Gladiator 1
+
+Same as before but now we need to win at least one time.
+
+```red
+;redcode
+;name Scanner
+;assert 1
+
+;name dwarf
+start   add.ab  #4, bmb
+        mov.i   bmb, @bmb
+        jmp     start
+bmb     dat     #0, #0
+end
+```
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ nc saturn.picoctf.net 52039 < imp.red
+;redcode
+;name Scanner
+;assert 1
+
+;name dwarf
+start   add.ab  #4, bmb
+        mov.i   bmb, @bmb
+        jmp     start
+bmb     dat     #0, #0
+end
+
+Submit your warrior: (enter 'end' when done)
+
+Warrior1:
+;redcode
+;name Scanner
+;assert 1
+
+;name dwarf
+start   add.ab  #4, bmb
+        mov.i   bmb, @bmb
+        jmp     start
+bmb     dat     #0, #0
+end
+
+Rounds: 100
+Warrior 1 wins: 14
+Warrior 2 wins: 0
+Ties: 86
+You did it!
+picoCTF{XXX}
+```
+
+### Reverse
+
+Download the file and run `strings` and `grep` the flag.
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ strings ret | grep pico
+picoCTF{H
+Password correct, please see flag: picoCTF{XXX}
+```
+
+### Safe Opener 2
+
+Download the file and run `strings` and `grep` the flag.
+
+```bash
+➜  Reverse-Engineering git:(main) ✗ strings SafeOpener.class | grep pico
+,picoCTF{XXX}
+```
+
+### timer
+
+We download the file and extract it with `unzip timer.apk -d ./chall`. We navigate to this folder and `cat` the `.xml` file.
+
+```bash
+➜  chall git:(main) ✗ cat AndroidManifest.xml 
+�
+ �.�(4L`z�����2Xn���&6J\��(��Xr���4�����>r��themelabeliconname
+debuggablexported
+minSdkVersion    authoritiesvalue
+             versionCode
+                        versionNametargetSdkVersion
+                                                   allowBackup
+                                                              supportsRtlfullBackupContent	roundIconcompileSdkVersioncompileSdkVersionCodenameappComponentFactorydataExtractionRules12actioactivityandroid�android.intent.action.MAIN android.intent.category.LAUNCHER&androidx.core.app.CoreComponentFactory+androidx.emoji2.text.EmojiCompatInitializer.androidx.lifecycle.ProcessLifecycleInitializerandroidx.startup'androidx.startup.InitializationProvider
+                                                                          applicatiocategorycom.example.timercom.example.timer.MainActivity"com.example.timer.androidx-startup*http://schemaintent-filtemanifests/anmeta-datapackage*picoCTF{t1m3r_r3v3rs3d_succ355fully_17496}platformBuildVersionCodeplatformBuildVersionNamprovideuses-sdkX$
+                                                     ���,rsz>����$���������&$	���$
+)$��� ����(!����*��� ����+����
+                             L��������-���$
+                                           ��� ��������-�
+                                                         ��������
+$�������$$����
+$�$���L��������$"$�������$��������%8������������������8�������� �������� ��������%��������` ��������,$���$#L$��������$��������'L'��������''��������' ��������,
+                                                                ����������������&����$
+```
+
+### vault-door-8
+
+Download the file and `cat` its content.
+
+```java
+// These pesky special agents keep reverse engineering our source code and then
+// breaking into our secret vaults. THIS will teach those sneaky sneaks a
+// lesson.
+//
+// -Minion #0891
+import java.util.*; import javax.crypto.Cipher; import javax.crypto.spec.SecretKeySpec;
+import java.security.*; class VaultDoor8 {public static void main(String args[]) {
+Scanner b = new Scanner(System.in); System.out.print("Enter vault password: ");
+String c = b.next(); String f = c.substring(8,c.length()-1); VaultDoor8 a = new VaultDoor8(); if (a.checkPassword(f)) {System.out.println("Access granted."); }
+else {System.out.println("Access denied!"); } } public char[] scramble(String password) {/* Scramble a password by transposing pairs of bits. */
+char[] a = password.toCharArray(); for (int b=0; b<a.length; b++) {char c = a[b]; c = switchBits(c,1,2); c = switchBits(c,0,3); /* c = switchBits(c,14,3); c = switchBits(c, 2, 0); */ c = switchBits(c,5,6); c = switchBits(c,4,7);
+c = switchBits(c,0,1); /* d = switchBits(d, 4, 5); e = switchBits(e, 5, 6); */ c = switchBits(c,3,4); c = switchBits(c,2,5); c = switchBits(c,6,7); a[b] = c; } return a;
+} public char switchBits(char c, int p1, int p2) {/* Move the bit in position p1 to position p2, and move the bit
+that was in position p2 to position p1. Precondition: p1 < p2 */ char mask1 = (char)(1 << p1);
+char mask2 = (char)(1 << p2); /* char mask3 = (char)(1<<p1<<p2); mask1++; mask1--; */ char bit1 = (char)(c & mask1); char bit2 = (char)(c & mask2); /* System.out.println("bit1 " + Integer.toBinaryString(bit1));
+System.out.println("bit2 " + Integer.toBinaryString(bit2)); */ char rest = (char)(c & ~(mask1 | mask2)); char shift = (char)(p2 - p1); char result = (char)((bit1<<shift) | (bit2>>shift) | rest); return result;
+} public boolean checkPassword(String password) {char[] scrambled = scramble(password); char[] expected = {
+0xF4, 0xC0, 0x97, 0xF0, 0x77, 0x97, 0xC0, 0xE4, 0xF0, 0x77, 0xA4, 0xD0, 0xC5, 0x77, 0xF4, 0x86, 0xD0, 0xA5, 0x45, 0x96, 0x27, 0xB5, 0x77, 0xD2, 0xD0, 0xB4, 0xE1, 0xC1, 0xE0, 0xD0, 0xD0, 0xE0 }; return Arrays.equals(scrambled, expected); } }
+```
+
+Obfuscated java code. Let's deobfuscate it to be more readable.
+
+```java
+import java.util.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.*;
+
+class VaultDoor8 {
+    public static void main(String args[]) {
+        Scanner b = new Scanner(System.in);
+        System.out.print("Enter vault password: ");
+        String c = b.next();
+        String f = c.substring(8, c.length() - 1);
+        VaultDoor8 a = new VaultDoor8();
+        if (a.checkPassword(f)) {
+            System.out.println("Access granted.");
+        } else {
+            System.out.println("Access denied!");
+        }
+    }
+
+    public char[] scramble(String password) {
+        char[] a = password.toCharArray();
+        for (int b = 0; b < a.length; b++) {
+            char c = a[b];
+            c = switchBits(c, 1, 2);
+            c = switchBits(c, 0, 3);
+            c = switchBits(c, 5, 6);
+            c = switchBits(c, 4, 7);
+            c = switchBits(c, 0, 1);
+            c = switchBits(c, 3, 4);
+            c = switchBits(c, 2, 5);
+            c = switchBits(c, 6, 7);
+            a[b] = c;
+        }
+        return a;
+    }
+
+    public char switchBits(char c, int p1, int p2) {
+        char mask1 = (char) (1 << p1);
+        char mask2 = (char) (1 << p2);
+        char bit1 = (char) (c & mask1);
+        char bit2 = (char) (c & mask2);
+        char rest = (char) (c & ~(mask1 | mask2));
+        char shift = (char) (p2 - p1);
+        char result = (char) ((bit1 << shift) | (bit2 >> shift) | rest);
+        return result;
+    }
+
+    public boolean checkPassword(String password) {
+        char[] scrambled = scramble(password);
+        char[] expected = {
+            0xF4, 0xC0, 0x97, 0xF0, 0x77, 0x97, 0xC0, 0xE4,
+            0xF0, 0x77, 0xA4, 0xD0, 0xC5, 0x77, 0xF4, 0x86,
+            0xD0, 0xA5, 0x45, 0x96, 0x27, 0xB5, 0x77, 0xD2,
+            0xD0, 0xB4, 0xE1, 0xC1, 0xE0, 0xD0, 0xD0, 0xE0
+        };
+        return Arrays.equals(scrambled, expected);
+    }
+}
+```
 
