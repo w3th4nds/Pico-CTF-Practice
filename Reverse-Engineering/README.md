@@ -2975,3 +2975,106 @@ $1 = 12905
 ```
 
 The flag is `picoCTF{12905}`.
+
+### Bit-O-Asm-1
+
+Download the file and `cat` its content.
+
+```gdb
+<+0>:     endbr64 
+<+4>:     push   rbp
+<+5>:     mov    rbp,rsp
+<+8>:     mov    DWORD PTR [rbp-0x4],edi
+<+11>:    mov    QWORD PTR [rbp-0x10],rsi
+<+15>:    mov    eax,0x30
+<+20>:    pop    rbp
+<+21>:    ret
+```
+
+The challenge asks what is in the `eax` register. As we can see, it moves `0x30` to `eax` which is `48` in decimal, so the flag is `picoCTF{48}`.
+
+### Bit-O-Asm-2
+
+Same as `Bit-O-Asm-1`.
+
+```bash
+<+0>:     endbr64 
+<+4>:     push   rbp
+<+5>:     mov    rbp,rsp
+<+8>:     mov    DWORD PTR [rbp-0x14],edi
+<+11>:    mov    QWORD PTR [rbp-0x20],rsi
+<+15>:    mov    DWORD PTR [rbp-0x4],0x9fe1a
+<+22>:    mov    eax,DWORD PTR [rbp-0x4]
+<+25>:    pop    rbp
+<+26>:    ret
+```
+
+We see that `eax` takes the value of `rbp-0x4`. At `+15`, `rbp-0x4` takes the value `0x9fe1a`, so the flag is `picoCTF{654874}`.
+
+### Bit-O-Asm-3
+
+Same as `Bit-O-Asm-1` and `Bit-O-Asm-2`.
+
+```bash
+<+0>:     endbr64 
+<+4>:     push   rbp
+<+5>:     mov    rbp,rsp
+<+8>:     mov    DWORD PTR [rbp-0x14],edi
+<+11>:    mov    QWORD PTR [rbp-0x20],rsi
+<+15>:    mov    DWORD PTR [rbp-0xc],0x9fe1a
+<+22>:    mov    DWORD PTR [rbp-0x8],0x4
+<+29>:    mov    eax,DWORD PTR [rbp-0xc]
+<+32>:    imul   eax,DWORD PTR [rbp-0x8]
+<+36>:    add    eax,0x1f5
+<+41>:    mov    DWORD PTR [rbp-0x4],eax
+<+44>:    mov    eax,DWORD PTR [rbp-0x4]
+<+47>:    pop    rbp
+<+48>:    ret
+```
+
+Going backwards we see that `eax` takes the value of `rbp-0x4`. `rbp-0x4` takes the value of `eax`, which is `eax + 0x1f5`. Before that, `eax` was multiplied with the value of `rbp-0x8`, which is `0x4`. `eax` at that time had the value of `rbp-0xc`, which is `0x9f31a`. I made a simple python script to make the calculations.
+
+```python
+#!/usr/bin/python3
+
+rbp_c = 0x9fe1a
+rbp_8 = 0x4
+eax = (rbp_c * rbp_8) + 0x1f5
+print(f'picoCTF{{{eax}}}')
+```
+
+### Bit-O-Asm-4
+
+Same as the previous challs.
+
+```gdb
+<+0>:     endbr64 
+<+4>:     push   rbp
+<+5>:     mov    rbp,rsp
+<+8>:     mov    DWORD PTR [rbp-0x14],edi
+<+11>:    mov    QWORD PTR [rbp-0x20],rsi
+<+15>:    mov    DWORD PTR [rbp-0x4],0x9fe1a
+<+22>:    cmp    DWORD PTR [rbp-0x4],0x2710
+<+29>:    jle    0x55555555514e <main+37>
+<+31>:    sub    DWORD PTR [rbp-0x4],0x65
+<+35>:    jmp    0x555555555152 <main+41>
+<+37>:    add    DWORD PTR [rbp-0x4],0x65
+<+41>:    mov    eax,DWORD PTR [rbp-0x4]
+<+44>:    pop    rbp
+<+45>:    ret
+```
+
+Going backwards again, we analyze the instructions and craft a python script to calculate the value of `eax`.
+
+```python
+#!/usr/bin/python3
+
+rbp_4 = 0x9fe1a
+rbp_4 -= 0x65
+assert rbp_4 > 0x2710
+
+print(f'picoCTF{{{rbp_4}}}')
+```
+
+
+

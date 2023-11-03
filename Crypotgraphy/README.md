@@ -219,3 +219,81 @@ decrypted_text = vigenere_decrypt(ciphertext, keyword)
 print("Decrypted Text:", decrypted_text)
 ```
 
+### HideToSee
+
+We download the image and open it with `eog atbash.jpg`.
+
+Nothing of interest there. We try `binwalk` to extract anything from the image but we get nothing. Well, another useful tool to extract content from images is `steghige`.
+
+```bash
+sudo apt install steghide -y
+```
+
+Then we run `steghide extract -sf atbash.jpg` with no `passphrase` and get a `txt` file.
+
+```bash
+krxlXGU{zgyzhs_xizxp_92533667}
+```
+
+Looks like `ceasar's` but as the image name suggests, it's `atbash`. We use this [site](https://www.dcode.fr/atbash-cipher) to decode it.
+
+### rail-fence
+
+Download the file and `cat` its content. We see a message that has been encoded with what the challenge says: `rail-fence` cipher. We use this [site](https://www.dcode.fr/rail-fence-cipher) to decode it by changing the `heieght` to 4 and tick `keep punctuations and spaces`.
+
+![](../assets/rail-fence.png)
+
+### credstuff
+
+Download the compressed file and extract it with `tar -xvf leak.tar`.
+
+The challenge says to find the username `cultiris` in `usernames.txt` and its corresponding password in `passwords.txt`. We will use `grep -n` to find the line of the username and then pipe its output to find the password. When we do this, we see its a `ROT13` string. We decode it and get the flag.
+
+```bash
+grep -n "cultiris" usernames.txt | cut -d':' -f1 | while read line; do sed -n "${line}p" passwords.txt; done | tr 'a-zA-Z' 'n-za-mN-ZA-M'
+```
+
+### basic-mod1
+
+Download the file and `cat` its content.
+
+```bash
+cat message.txt 
+128 322 353 235 336 73 198 332 202 285 57 87 262 221 218 405 335 101 256 227 112 140
+```
+
+The challenge says that we need to `mod 37` these values and then address the output to the corresponding letter in the alphabet. Out of range characters are the numeric ones and the underscore. We make a simple python script to get the flag.
+
+```python
+#!/usr/bin/python3
+
+enc = [128, 322, 353, 235, 336, 73, 198,
+       332, 202, 285, 57, 87, 262, 221,
+       218, 405, 335, 101, 256, 227, 112, 140]
+
+alpha = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+
+flag = ''.join(alpha[i % 37] for i in enc)
+print(f'picoCTF{{{flag}}}')
+```
+
+### basic-mod2
+
+Same as `basic-mod1` with the slight difference that now it wants the `inverse modulo`. I used `sympy` `mod_inverse` function to do it:
+
+```python
+#!/usr/bin/python3
+from sympy import mod_inverse
+
+enc = [ 432, 331, 192, 108, 180, 50, 231, 
+		188, 105, 51, 364, 168, 344, 195,
+		297, 342, 292, 198, 448, 62, 236, 342, 63]
+
+alpha = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+
+flag = ''
+flag += ''.join(alpha[mod_inverse(num % 41, 41) - 1] for num in enc)
+
+print(f'picoCTF{{{flag}}}')
+```
+
