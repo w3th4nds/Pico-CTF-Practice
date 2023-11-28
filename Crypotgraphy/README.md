@@ -219,3 +219,166 @@ decrypted_text = vigenere_decrypt(ciphertext, keyword)
 print("Decrypted Text:", decrypted_text)
 ```
 
+### Mr-Worldwide
+
+Download the file and `cat` its content.
+
+```bash
+cat message.txt 
+picoCTF{(35.028309, 135.753082)(46.469391, 30.740883)(39.758949, -84.191605)(41.015137, 28.979530)(24.466667, 54.366669)(3.140853, 101.693207)_(9.005401, 38.763611)(-3.989038, -79.203560)(52.377956, 4.897070)(41.085651, -73.858467)(57.790001, -152.407227)(31.205753, 29.924526)}
+```
+
+These paired values seem like geolocations. Searching the first one, we see it's `Kamigo Yard` or `Kyoto`. Taking the first letter of each location we get the flag.
+
+| Location                     | Coordinates            |
+| ---------------------------- | ---------------------- |
+| **K**amigo Yard or **K**yoto | 35.028309, 135.753082  |
+| **O**desa                    | 46.469391, 30.740883   |
+| **D**ayton                   | 39.758949, -84.191605  |
+| **I**stanbul                 | 41.015137, 28.979530   |
+| **A**bu Dhabi                | 24.466667, 54.366669   |
+| **K**uala Lumpur             | 3.140853, 101.693207   |
+| **A**ddis Ababa              | 9.005401, 38.763611    |
+| **L**oja                     | -3.989038, -79.203560  |
+| **A**msterdam                | 52.377956, 4.897070    |
+| **S**leepy Hollow            | 41.085651, -73.858467  |
+| **K**odiak                   | 57.790001, -152.407227 |
+| **Al**exandria               | 31.205753, 29.924526   |
+
+### Flags
+
+Download the image and open it. We see some weird flag. Not knowing about this, I searched about `flag ciphers` and found this image:
+
+![](../assets/marines_flag.png)
+
+The flags seem similar to our file, so we just decode them and get the flag. We can use this [site](https://www.dcode.fr/maritime-signals-code).
+
+### la cifra de
+
+We connect to the remote instance with `nc` and get this:
+
+```bash
+nc jupiter.challenges.picoctf.org 5726
+Encrypted message:
+Ne iy nytkwpsznyg nth it mtsztcy vjzprj zfzjy rkhpibj nrkitt ltc tnnygy ysee itd tte cxjltk
+
+Ifrosr tnj noawde uk siyyzre, yse Bnretèwp Cousex mls hjpn xjtnbjytki xatd eisjd
+
+Iz bls lfwskqj azycihzeej yz Brftsk ip Volpnèxj ls oy hay tcimnyarqj dkxnrogpd os 1553 my Mnzvgs Mazytszf Merqlsu ny hox moup Wa inqrg ipl. Ynr. Gotgat Gltzndtg Gplrfdo 
+
+Ltc tnj tmvqpmkseaznzn uk ehox nivmpr g ylbrj ts ltcmki my yqtdosr tnj wocjc hgqq ol fy oxitngwj arusahje fuw ln guaaxjytrd catizm tzxbkw zf vqlckx hizm ceyupcz yz tnj fpvjc hgqqpohzCZK{m311a50_0x_a1rn3x3_h1ah3x6kp60egf}
+
+Ehk ktryy herq-ooizxetypd jjdcxnatoty ol f aordllvmlbkytc inahkw socjgex, bls sfoe gwzuti 1467 my Rjzn Hfetoxea Gqmexyt.
+
+Tnj Gimjyèrk Htpnjc iy ysexjqoxj dosjeisjd cgqwej yse Gqmexyt Doxn ox Fwbkwei Inahkw.
+
+Tn 1508, Ptsatsps Zwttnjxiax tnbjytki ehk xz-cgqwej ylbaql rkhea (g rltxni ol xsilypd gqahggpty) ysaz bzuri wazjc bk f nroytcgq nosuznkse ol yse Bnretèwp Cousex.
+
+Gplrfdo’y xpcuso butvlky lpvjlrki tn 1555 gx l cuseitzltoty ol yse lncsz. Yse rthex mllbjd ol yse gqahggpty fce tth snnqtki cemzwaxqj, bay ehk fwpnfmezx lnj yse osoed qptzjcs gwp mocpd hd xegsd ol f xnkrznoh vee usrgxp, wnnnh ify bk itfljcety hizm paim noxwpsvtydkse.
+```
+
+At first, I thought I should proceed with some frequency analysis but I did not get much. Then I took a look at the years (1553 and 1508) trying to find anything close to that, and landed on this:
+
+![](../assets/vigenere_wiki.png)
+
+So, we have a possible `Vigenere` cipher with unknown key. This time, I will use an online [decoder](https://www.dcode.fr/vigenere-cipher).
+
+![](../assets/vigenere_dcodefr.png)
+
+### Tapping
+
+Connect to the remote server with `nc` and see that it's a `morse code`. 
+
+```bash
+nc jupiter.challenges.picoctf.org 48247
+.--. .. -.-. --- -.-. - ..-. { -- ----- .-. ... ...-- -.-. ----- -.. ...-- .---- ... ..-. ..- -. .---- ..--- -.... .---- ....- ...-- ---.. .---- ---.. .---- }
+```
+
+We can use an online converter or write our own script to decrypt it.
+
+```python
+from pwn import *
+
+morse_code_dict = {
+    '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+    '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+    '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+    '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+    '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+    '--..': 'Z',
+    '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4',
+    '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+    '.-.-.-': '.', '--..--': ',', '..--..': '?', '-....-': '-', '-.--.': '(',
+    '-.--.-': ')', '.----.': "'", '-...-': '=', '.-..-.': '"', '.--.-.': '/',
+    '-..-.': '/'
+}
+
+def morse_to_ascii(morse_code):
+    words = morse_code.split('   ')  # Morse code words are separated by 3 spaces
+    ascii_text = ''
+    for word in words: characters = word.split()  # Characters in Morse code words are separated by 1 space
+        for char in characters:
+            if char in morse_code_dict: ascii_text += morse_code_dict[char]
+            else: ascii_text += '?'  # Use '?' for unknown Morse code characters
+        ascii_text += ' '  # Separate words by space
+    return ascii_text.strip()  # Remove leading/trailing spaces
+
+r = remote('jupiter.challenges.picoctf.org', 48247)
+
+morse_code = r.recvline().strip().decode()
+ascii_text = morse_to_ascii(morse_code)
+print("Morse Code:", morse_code)
+print("ASCII Text:", ascii_text)
+```
+
+### substitution0
+
+Download the file and `cat` its content.
+
+```bash
+OHNFUMWSVZLXEGCPTAJDYIRKQB 
+
+Suauypcg Xuwaogf oacju, rvds o waoiu ogf jdoduxq ova, ogf hacywsd eu dsu huudxu
+mace o wxojj noju vg rsvns vd roj ugnxcjuf. Vd roj o huoydvmyx jnoaohouyj, ogf, od
+dsod dveu, yglgcrg dc godyaoxvjdj—cm ncyaju o wauod pavbu vg o jnvugdvmvn pcvgd
+cm ivur. Dsuau ruau drc acygf hxonl jpcdj guoa cgu ukdauevdq cm dsu honl, ogf o
+xcgw cgu guoa dsu cdsua. Dsu jnoxuj ruau uknuufvgwxq soaf ogf wxcjjq, rvds oxx dsu
+oppuoaognu cm hyagvjsuf wcxf. Dsu ruvwsd cm dsu vgjund roj iuaq aueoalohxu, ogf,
+dolvgw oxx dsvgwj vgdc ncgjvfuaodvcg, V ncyxf soafxq hxoeu Zypvdua mca svj cpvgvcg
+aujpundvgw vd.
+
+Dsu mxow vj: pvncNDM{5YH5717Y710G_3I0XY710G_03055505}
+```
+
+The hint says to try `frequency analysis`. We use this [site](https://wilsoa.github.io/gallery/frequency_analysis.html).
+
+It's pretty obvious that the `pvncNDM` is the `picoCTF`. Starting from that, we can find the rest of the letters.
+
+![](../assets/substitution0.png)
+
+### substitution1
+
+This is the same as `substitution0`.
+
+![](../assets/substitution1.png)
+
+### substitution2
+
+Same as `substitution0` and `substitution1`. 
+
+![](../assets/substitution2.png)
+
+### rotation
+
+Download the file and `cat` its content.
+
+```bash
+xqkwKBN{z0bib1wv_l3kzgxb3l_4k71n5j0}
+```
+
+It looks like a simple `ceasar's cipher`. We try `rot18` and get the flag.
+
+```bash
+echo 'xqkwKBN{z0bib1wv_l3kzgxb3l_4k71n5j0}' | tr 'A-Za-z' 'S-ZA-Rs-za-r'
+```
+
