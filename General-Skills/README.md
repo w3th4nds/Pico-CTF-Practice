@@ -510,8 +510,6 @@ Checking password: 9581
 Flag --> picoCTF{XXX}
 ```
 
-
-
 ### runme.py
 
 Download the script and run it to get the flag.

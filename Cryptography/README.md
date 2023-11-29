@@ -219,9 +219,6 @@ decrypted_text = vigenere_decrypt(ciphertext, keyword)
 print("Decrypted Text:", decrypted_text)
 ```
 
-<<<<<<< HEAD
-### Mr-Worldwide
-=======
 ### HideToSee
 
 We download the image and open it with `eog atbash.jpg`.
@@ -257,7 +254,26 @@ grep -n "cultiris" usernames.txt | cut -d':' -f1 | while read line; do sed -n "$
 ```
 
 ### basic-mod1
->>>>>>> dbc9f0642ee509296e57fd3490078c857db187f8
+
+Download the file and take each number mod 37 and map it to the following character set: 0-25 is the alphabet (uppercase), 26-35 are the decimal digits, and 36 is an underscore.
+
+```python
+#!/usr/bin/python3
+from sympy import mod_inverse
+
+enc = [ 128, 322, 353, 235, 336, 73, 198, 332, 
+        202, 285, 57, 87, 262, 221, 218, 405, 
+        335, 101, 256, 227, 112, 140]
+
+alpha = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+
+flag = ''
+flag += ''.join(alpha[(num % 37)] for num in enc)
+
+print(f'picoCTF{{{flag}}}')
+```
+
+### Mr-Worldwide
 
 Download the file and `cat` its content.
 
@@ -419,7 +435,6 @@ It looks like a simple `ceasar's cipher`. We try `rot18` and get the flag.
 
 ```bash
 echo 'xqkwKBN{z0bib1wv_l3kzgxb3l_4k71n5j0}' | tr 'A-Za-z' 'S-ZA-Rs-za-r'
-=======
 128 322 353 235 336 73 198 332 202 285 57 87 262 221 218 405 335 101 256 227 112 140
 ```
 
@@ -456,6 +471,21 @@ flag = ''
 flag += ''.join(alpha[mod_inverse(num % 41, 41) - 1] for num in enc)
 
 print(f'picoCTF{{{flag}}}')
->>>>>>> dbc9f0642ee509296e57fd3490078c857db187f8
 ```
 
+### ReadMyCert
+
+Download the file. We see its a `.csr` file so we use this [site](https://www.ssldragon.com/decode-csr/) to decode it.
+
+### waves over lambda
+
+We connect with `nc` and get some random text each time. 
+
+```console
+-------------------------------------------------------------------------------
+ftzncpai xwcw ki rtyc mvpn - mcwsywzfr_ki_f_tjwc_vpleup_pnmvfnaryw
+-------------------------------------------------------------------------------
+ewabwwz yi axwcw bpi, pi k xpjw pvcwpur ipku itlwbxwcw, axw etzu tm axw iwp. ewikuwi xtvukzn tyc xwpcai atnwaxwc axctynx vtzn gwcktui tm iwgpcpaktz, ka xpu axw wmmwfa tm lpqkzn yi atvwcpza tm wpfx taxwc'i rpczipzu wjwz ftzjkfaktzi. axw vpbrwcaxw ewia tm tvu mwvvtbixpu, ewfpyiw tm xki lpzr rwpci pzu lpzr jkcaywi, axw tzvr fyixktz tz uwfq, pzu bpi vrkzn tz axw tzvr cyn. axw pfftyzapza xpu ectynxa tya pvcwpur p etd tm utlkztwi, pzu bpi atrkzn pcfxkawfaycpvvr bkax axw etzwi. lpcvtb ipa fctii-vwnnwu cknxa pma, vwpzkzn pnpkzia axw lkoowz-lpia. xw xpu iyzqwz fxwwqi, p rwvvtb ftlgvwdktz, p iacpknxa epfq, pz pifwakf pigwfa, pzu, bkax xki pcli uctggwu, axw gpvli tm xpzui tyabpcui, cwiwlevwu pz kutv. axw ukcwfatc, ipakimkwu axw pzfxtc xpu nttu xtvu, lpuw xki bpr pma pzu ipa utbz pltznia yi. bw wdfxpznwu p mwb btcui vpokvr. pmawcbpcui axwcw bpi ikvwzfw tz etpcu axw rpfxa. mtc itlw cwpitz tc taxwc bw uku zta ewnkz axpa nplw tm utlkztwi. bw mwva lwukapakjw, pzu mka mtc ztaxkzn eya gvpfku iapckzn. axw upr bpi wzukzn kz p iwcwzkar tm iakvv pzu wdsykikaw eckvvkpzfw. axw bpawc ixtzw gpfkmkfpvvr; axw iqr, bkaxtya p igwfq, bpi p ewzknz kllwzikar tm yziapkzwu vknxa; axw jwcr lkia tz axw wiiwd lpcix bpi vkqw p npyor pzu cpukpza mpeckf, xyzn mctl axw bttuwu ckiwi kzvpzu, pzu ucpgkzn axw vtb ixtcwi kz ukpgxpztyi mtvui. tzvr axw nvttl at axw bwia, ecttukzn tjwc axw yggwc cwpfxwi, ewfplw ltcw itlecw wjwcr lkzyaw, pi km pznwcwu er axw pggctpfx tm axw iyz.
+```
+
+The challenge suggests it uses a lot of substitutions to encrypt the message. Suppose it's monoalphabetic, we use this [site](https://www.dcode.fr/monoalphabetic-substitution) to decrypt it.

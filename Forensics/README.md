@@ -919,4 +919,3 @@ done
 
 feh flag.png
 ```
-
