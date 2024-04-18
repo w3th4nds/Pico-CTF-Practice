@@ -489,3 +489,7 @@ ewabwwz yi axwcw bpi, pi k xpjw pvcwpur ipku itlwbxwcw, axw etzu tm axw iwp. ewi
 ```
 
 The challenge suggests it uses a lot of substitutions to encrypt the message. Suppose it's monoalphabetic, we use this [site](https://www.dcode.fr/monoalphabetic-substitution) to decrypt it.
+
+### interencdec
+
+Download the file, double `base64` decode it and then perform `ROT-19` to the string to get the flag.
