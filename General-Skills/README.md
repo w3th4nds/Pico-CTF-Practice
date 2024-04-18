@@ -1137,3 +1137,56 @@ Specialer$ cd ala/
 Specialer$ read -r line < kazam.txt; echo $line
 return 0 picoCTF{XXX}
 ```
+
+### Super SSH
+
+We just need to connect via `ssh` and add the password given.
+
+```bash
+$ ssh ctf-player@titan.picoctf.net -p 64411
+```
+
+Press `yes` and then insert password to get the flag.
+
+### Time Machine
+
+Download the file and `unzip` it. After that, we `grep` the directories to get the flag.
+
+```bash
+$ grep -ira picoCTF{
+```
+
+### Binary Search
+
+Simple maths, we take ~half of the number and add / sub depending on the answer.
+
+```console
+I'm thinking of a number between 1 and 1000.
+Enter your guess: 500
+Higher! Try again.
+Enter your guess: 750
+Higher! Try again.
+Enter your guess: 850
+Lower! Try again.
+Enter your guess: 800
+Higher! Try again.
+Enter your guess: 825
+Higher! Try again.
+Enter your guess: 835
+Lower! Try again.
+Enter your guess: 830
+Lower! Try again.
+Enter your guess: 828
+Higher! Try again.
+Enter your guess: 829
+Congratulations! You guessed the correct number: 829
+```
+
+### Blame Game
+
+Download the file and `unzip` it. Then run `grep` in the directory to get the flag.
+
+```bash
+$ grep -ira picoCTF{
+```
+
