@@ -1190,3 +1190,190 @@ Download the file and `unzip` it. Then run `grep` in the directory to get the fl
 $ grep -ira picoCTF{
 ```
 
+### Commitment Issues
+
+Download the file and `unzip` it.
+
+When we `cd` in the `drop-in` folder, we see that it contains a `.git` folder meaning it's a git repository. We try to `git checkout` and see these options:
+
+```console
+➜  drop-in git:(master) git checkout 6603cb4
+HEAD    master
+3899edb  -- [HEAD]    remove sensitive info (7 weeks ago)
+6603cb4  -- [HEAD^]   create flag (7 weeks ago)
+```
+
+We choose the `create flag` one and then cat `message.txt` to get the flag.
+
+```console
+➜  drop-in git:(mastergit checkout 6603cb4 
+Note: switching to '6603cb4'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 6603cb4 create flag
+➜  drop-in git:(6603cb4) ls
+message.txt
+➜  drop-in git:(6603cb4) cat message.txt 
+```
+
+### Collaborative Development
+
+Same as before we download and `unzip` the file. We try to `git checkout` and see that there are some `part-1, part-2, part-3` which might be part of the flag. We checkout there each time and `cat flag,py`. 
+
+```console
+➜  drop-in git:(eb4de2agit checkout feature/part-1 
+Previous HEAD position was eb4de2a init flag printer
+Switched to branch 'feature/part-1'
+➜  drop-in git:(feature/part-1) ls
+flag.py
+➜  drop-in git:(feature/part-1) cat flag.py 
+print("Printing the flag...")
+print("picoCTF{t3@mw0rk_", end='')%                                                                           ➜  drop-in git:(feature/part-1) git checkout feature/part-2 
+Switched to branch 'feature/part-2'
+➜  drop-in git:(feature/part-2) cat flag.py                
+print("Printing the flag...")
+
+print("m@k3s_th3_dr3@m_", end='')%                                                                           ➜  drop-in git:(feature/part-2) git checkout feature/part-3 
+Switched to branch 'feature/part-3'
+➜  drop-in git:(feature/part-3) cat flag.py 
+print("Printing the flag...")
+
+print("w0rk_e4b79efb}")
+```
+
+### dont-you-love-banners
+
+First we `nc` to the `leaking` instance and get the password.
+
+```console
+$ nc tethys.picoctf.net 59298
+SSH-2.0-OpenSSH_7.6p1 My_Passw@rd_@1234
+```
+
+Now that we have the password, we connect to the "real" instance. There are 2 other questions that can be answered simply by googling.
+
+```console
+*************************************
+**************WELCOME****************
+*************************************
+
+what is the password? 
+My_Passw@rd_@1234
+What is the top cyber security conference in the world?
+defcon
+the first hacker ever was known for phreaking(making free phone calls), who was it?
+john
+```
+
+After that we get shell.
+
+Now that wee have shell, we need to somehow read `/root/flag.txt`.  Thanks to the hint, a symbolic link can help us do the job. Although we cannot execute banner while we are `player`, if we disconnect and `nc` again, our symbolic link would still be there and executed it.
+
+```bash
+$ rm -f /home/player/banner && ln -s /root/flag.txt /home/player/banner
+```
+
+Disconnect and `nc` again to get the flag.
+
+### binhexa
+
+The challenge gives us 2 random `binary` numbers each run. With these numbers, we need to perform operations that are random every time. We can use this [site](https://www.rapidtables.com/calc/math/binary-calculator.html) to make the calculations easy.
+
+```console
+Welcome to the Binary Challenge!"
+Your task is to perform the unique operations in the given order and find the final result in hexadecimal that yields the flag.
+
+Binary Number 1: 11010010
+Binary Number 2: 00101001
+
+
+Question 1/6:
+Operation 1: '>>'
+Perform a right shift of Binary Number 2 by 1 bits .
+Enter the binary result: 10100.1
+
+Incorrect input. Provide the right input
+Enter the binary result: 10100  
+Correct!
+
+Question 2/6:
+Operation 2: '+'
+Perform the operation on Binary Number 1&2.
+Enter the binary result: 11111011
+Correct!
+
+Question 3/6:
+Operation 3: '|'
+Perform the operation on Binary Number 1&2.
+Enter the binary result: 11111011
+Correct!
+
+Question 4/6:
+Operation 4: '*'
+Perform the operation on Binary Number 1&2.
+Enter the binary result: 10000110100010
+Correct!
+
+Question 5/6:
+Operation 5: '<<'
+Perform a left shift of Binary Number 1 by 1 bits.
+Enter the binary result: 110100100
+Correct!
+
+Question 6/6:
+Operation 6: '&'
+Perform the operation on Binary Number 1&2.
+Enter the binary result: 10000000
+Incorrect. Try again
+Enter the binary result: 00000000
+Correct!
+
+Enter the results of the last operation in hexadecimal: 0
+
+Correct answer!
+The flag is: picoCTF{XXX}
+```
+
+### endianness
+
+We are given a random string and we need to give its `Little` and `Big` `Endianness`.
+
+```python
+#!/usr/bin/python3
+from pwn import *
+import warnings
+import os
+warnings.filterwarnings('ignore')
+context.log_level = 'critical'
+
+os.system('clear')
+
+IP   = str(sys.argv[1]) if len(sys.argv) >= 2 else '0.0.0.0'
+PORT = int(sys.argv[2]) if len(sys.argv) >= 3 else 1337
+r    = remote(IP, PORT)
+print(f'Running solver remotely at {IP} {PORT}\n')
+
+r.recvuntil('Word: ')
+s = r.recvline().strip()
+ 
+r.sendline(enhex(s[::-1]))
+r.sendline(enhex(s))
+
+r.recvuntil('Flag is: ')
+print(f'Flag --> {r.recvline().strip().decode()}\n')
+```
+
