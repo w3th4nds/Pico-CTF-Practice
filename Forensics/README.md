@@ -919,3 +919,33 @@ done
 
 feh flag.png
 ```
+
+### Scan Surprise
+
+We simply download the file and `unzip` it. It's a `QR` code. We make a simple python script to decode it and get the flag.
+
+```python
+import cv2
+import numpy as np
+
+def decode_qr_code(image_path):
+    # Read the image using OpenCV
+    img = cv2.imread(image_path)
+
+    # Initialize the QRCode detector
+    detector = cv2.QRCodeDetector()
+
+    # Detect and decode the QR code in the image
+    data, bbox, _ = detector.detectAndDecode(img)
+
+    # Check if there is a QR code in the image
+    if bbox is not None:
+        print("QR Code detected and decoded:")
+        print(data)
+    else:
+        print("No QR Code found.")
+
+# Example usage: Replace 'path_to_qr_code_image.jpg' with the path to your QR code image
+decode_qr_code('flag.png')
+```
+
